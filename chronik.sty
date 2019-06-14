@@ -1,0 +1,276 @@
+%--------------------------------------------------------------
+% basic stuff (encoding etc.)
+%-------------------------------------------------------------- 
+
+\usepackage[utf8]{inputenc}   % letters with accents
+\usepackage[T1]{fontenc} 			% Use 8-bit encoding 
+\usepackage[ngerman]{babel}   % Zeilenumbrüche nach deutscher Rechtschreibung
+\usepackage{csquotes}         % correct quotes (e.g. in bibliography)
+\usepackage{xcolor}           % colored links etc.
+
+% change title of toc at begin (babel redefines it there)
+\AtBeginDocument{
+\renewcommand{\contentsname}{inhalt}
+\renewcommand{\listfigurename}{abbildungen}
+}
+
+% garamond is a classic font 
+\usepackage[oldstyle,medium]{ebgaramond}
+
+% for microtypographie (e.g. adjust spacing in small caps)
+% http://www.khirevich.com/latex/microtype/
+\usepackage[ 
+  activate={true,nocompatibility},
+  final,
+  kerning=true,
+  factor=1100,
+  stretch=10,
+  shrink=10,
+  letterspace=80,
+]{microtype}
+
+% kpfonts is not supported tracking. Therefor I manually inserted
+% lsstyle at the appropriate positions. If other font is used:
+%\SetTracking{encoding=*,shape=sc,size=-large}{100}
+%\SetTracking{encoding=*,shape=sc,size=normalsize-}{50}
+
+\KOMAoptions{DIV=calc}   % recalculate Satzspiegel with new font
+
+% symbols for genealogy
+% https://tex.stackexchange.com/questions/38677/what-is-a-good-symbol-for-day-of-birth
+\usepackage{genealogytree}
+
+\let\geboren\gtrsymBorn
+\let\gestorben\gtrsymDied
+\let\geheiratet\gtrsymMarried
+\let\geschieden\gtrsymDivorced
+\let\taufe\gtrsymBaptized
+\let\gefallen\gtrsymKilled
+\let\bestattet\gtrsymBuried
+\let\female\gtrsymFemale
+\let\male\gtrsymMale
+
+%\let\born\textborn
+%\let\died\textdied
+%\renewcommand{\textborn}{{\fontfamily{cmr}\selectfont\born}}
+%\renewcommand{\textdied}{{\fontfamily{cmr}\selectfont\died}}
+
+%--------------------------------------------------------------
+% headings
+%-------------------------------------------------------------- 
+\addtokomafont{disposition}{\rmfamily}
+\setkomafont{chapter}{\normalfont\Large\lsstyle\scshape\lowercase}
+\setkomafont{section}{\normalfont\large}
+\setkomafont{subsection}{\normalfont\itshape}
+
+%--------------------------------------------------------------
+% page number (no header/footer)
+%-------------------------------------------------------------- 
+\RequirePackage{scrlayer-scrpage}
+\clearpairofpagestyles			  % remove default header
+\cfoot[\pagemark]{\pagemark}
+
+%--------------------------------------------------------------
+% table of contents
+%-------------------------------------------------------------- 
+
+\usepackage{mfirstuc}         % captialize first letter of word
+
+\DeclareTOCStyleEntry[%
+  beforeskip=0.0em,
+  indent=0cm,
+  numwidth=0.0cm,
+  linefill=\enspace,%
+  raggedpagenumber,%
+  pagenumberformat=\normalsize,%
+  entryformat=\normalsize%
+]{tocline}{chapter}
+\DeclareTOCStyleEntry[%
+  indent=0.4cm,
+  linefill=\enspace,%
+  raggedpagenumber,%
+  pagenumberformat=\small%
+]{tocline}{section}
+\DeclareTOCStyleEntry[
+  entrynumberformat=Abbildung\;,
+  numwidth=5.5em,
+  indent=0cm,
+  linefill=\enspace,%
+  raggedpagenumber,%
+  pagenumberformat=\normalsize,%
+  %entryformat=\scshape\lowercase%
+]{tocline}{figure}
+
+
+%==========================================================
+% include images/pdfs
+%==========================================================
+
+\usepackage{graphicx}
+\graphicspath{{img/}{../img/1800-1849/}{../img/1850-1900/}{../img/1900-1950/}{../img/1950-2000/}{../img/2000/}}
+
+\usepackage{caption}          % handle figure caption
+\usepackage{float}            % arbitrary figure placement
+\usepackage[
+    section]{placeins}        % Provides \FloatBarrier to place images
+\usepackage{pdfpages}         % include pdfs
+\usepackage[
+    encoding,
+    filenameencoding=utf8,
+    space]{grffile}           % support filenames with spaces and utf8 encoding
+\usepackage{sidenotes}        % provide marginfigure 
+\usepackage{mparhack}         % correct placment of margin floats
+
+%==========================================================
+% options to pass to package
+%==========================================================
+
+%\usepackage{changepage}
+\usepackage{enumitem}
+\setlist[enumerate]{
+  %after = \vspace{-\baselineskip},
+  itemsep = 0pt,
+  parsep = 0pt,
+  leftmargin = 0.7cm,
+  partopsep = 1em,
+  topsep = -1pt,
+  %nolistsep,
+  %noitemsep
+  }
+  \setlist[itemize]{
+    %after = \vspace{-\baselineskip},
+    itemsep = 0pt,
+    parsep = 0pt,
+    leftmargin = 0.3cm,
+    partopsep = 1em,
+    topsep = -1pt,
+    %nolistsep,
+    %noitemsep
+    }
+\renewcommand\labelitemi{}
+
+\RequirePackage{pgfkeys}
+\RequirePackage{pgfopts}
+\RequirePackage{xifthen}
+
+\pgfkeys{
+	% create keys 
+    /person/surname/.initial=,         % surname
+    /person/givenname/.initial=,       % givenname
+    /person/label/.initial=,           % label for references
+    /person/suffix/.initial=,          % used to make index unique
+    /person/filename/.initial=,        % path to image
+}
+
+\newenvironment{person}[1][]{%
+    \begingroup
+    \pgfqkeys{/person}{#1}%
+%
+    % read in values and store in macros
+    \pgfkeysgetvalue{/person/surname}\surname
+    \pgfkeysgetvalue{/person/givenname}\givenname
+    \pgfkeysgetvalue{/person/label}\PersonID
+    \pgfkeysgetvalue{/person/suffix}\suffix
+    \pgfkeysgetvalue{/person/filename}\filename
+%
+	% check if all mandatory arguments are available
+    \ifx\surname\empty
+    	\PackageError{chronik}{Surname missing}{}%
+    \fi
+    \ifx\givenname\empty
+        \PackageError{chronik}{Given name missing}{}%
+    \fi
+%
+    \subsection*{\large\itshape\givenname\space\surname}
+    \ifx\PersonID\empty
+    \else
+      \label{\PersonID}
+    \fi
+    \ifx\filename\empty
+    \else
+    \begin{marginfigure}[0.em]
+    \includegraphics[width=3cm]{\filename}
+    \end{marginfigure}
+    \fi
+%
+    \index{\surname!\givenname\space(\suffix)}%
+      
+    \setlength{\parindent}{0cm} % no indent inside enviornemnt
+    %\begin{adjustwidth}{0pt}{0pt}
+}{%
+    %\end{adjustwidth}
+    \endgroup
+    \clearpage
+}%
+
+
+%--------------------------------------------------------------
+% Quellen, Index und links
+%-------------------------------------------------------------- 
+
+% Personenverzeichnis
+\usepackage{imakeidx}
+\makeindex[
+    columns = 2,
+    options = -s index,
+    title   = personenverzeichnis,
+    ]
+
+% Bibliography
+\RequirePackage[
+                backend=biber,
+				        style=numeric,
+                hyperref=true,
+                mincrossrefs=100,      % don't include collection
+               	sorting=ynt,
+               	style=numeric,
+               	url=false,
+               	uniquename=false,
+               	uniquelist=false
+                ]{biblatex}
+
+\DeclareFieldFormat[book]{title}{\textit{#1}} 
+\DeclareFieldFormat[collection]{title}{#1} 
+\DeclareFieldFormat[incollection]{title}{#1} 
+
+\DeclareBibliographyDriver{collection}{%
+  \usebibmacro{begentry}%
+  \printfield{title}%
+  \setunit{\space}%
+  \printfield{year}%
+  \usebibmacro{finentry}}
+  
+\newbibmacro{mycrossref}{%
+  \fullcite{\thefield{crossref}}}
+\DeclareBibliographyDriver{incollection}{%
+  \usebibmacro{begentry}%
+  \ifentryinbib{\thefield{crossref}}{%
+    \usebibmacro{mycrossref}%
+    \setunit{\space\addcomma\addspace}%
+    }{}%
+  \printfield{title}%
+  \setunit{\space}%
+  \printfield{year}%
+  \setunit{\addcomma\addspace Nr.\space}%
+  \printfield{number}%  
+  \usebibmacro{finentry}}
+
+\DeclareBibliographyDriver{book}{%
+  \usebibmacro{begentry}%
+  \printfield{title}%
+  \setunit{\addcomma\addspace}%
+  \usebibmacro{author}%
+  \setunit{\addcomma\addspace}%
+  \printfield{year}%
+  \usebibmacro{finentry}}
+
+% links inside the document
+\usepackage[
+    colorlinks = true,
+    linktoc = page,
+    linkcolor={red!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+    ]{hyperref}
+
+    
