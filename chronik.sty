@@ -2,11 +2,14 @@
 % basic stuff (encoding etc.)
 %-------------------------------------------------------------- 
 
+
 \usepackage[utf8]{inputenc}   % letters with accents
 \usepackage[T1]{fontenc} 			% Use 8-bit encoding 
 \usepackage[ngerman]{babel}   % Zeilenumbrüche nach deutscher Rechtschreibung
 \usepackage{csquotes}         % correct quotes (e.g. in bibliography)
 \usepackage{xcolor}           % colored links etc.
+
+\definecolor{Maroon}{cmyk}{0, 0.87, 0.68, 0.32}
 
 % change title of toc at begin (babel redefines it there)
 \AtBeginDocument{
@@ -106,20 +109,23 @@
 % include images/pdfs
 %==========================================================
 
-\usepackage{graphicx}
+\usepackage{graphicx}         % include images
 \graphicspath{{img/}{../img/1800-1849/}{../img/1850-1900/}{../img/1900-1950/}{../img/1950-2000/}{../img/2000/}}
 
-\usepackage{caption}          % handle figure caption
-\usepackage{float}            % arbitrary figure placement
-\usepackage[
-    section]{placeins}        % Provides \FloatBarrier to place images
-\usepackage{pdfpages}         % include pdfs
 \usepackage[
     encoding,
     filenameencoding=utf8,
     space]{grffile}           % support filenames with spaces and utf8 encoding
+
+%\usepackage{caption}          % handle figure caption
+\usepackage{float}            % arbitrary figure placement
 \usepackage{sidenotes}        % provide marginfigure 
 \usepackage{mparhack}         % correct placment of margin floats
+
+%\usepackage[
+%    section]{placeins}        % Provides \FloatBarrier to place images
+\usepackage{pdfpages}         % include pdfs (used to include Family Trees)
+\includepdfset{angle=-90}
 
 %==========================================================
 % options to pass to package
@@ -200,7 +206,8 @@
 }{%
     %\end{adjustwidth}
     \endgroup
-    \clearpage
+    \bigbreak
+    %\clearpage
 }%
 
 
@@ -273,4 +280,9 @@
     urlcolor={blue!80!black}
     ]{hyperref}
 
-    
+\usepackage[
+    type={CC},
+    modifier={by-nc-sa},
+    version={3.0},
+  ]{doclicense}
+
